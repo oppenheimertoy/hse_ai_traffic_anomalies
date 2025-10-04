@@ -1,0 +1,18 @@
+[tool.poetry]
+name = "hse-ai-traffic-anomalies"
+version = "0.1.0"
+description = "This project is focused on detecting anomalies in network traffic using ML and DL methodologies. Created as annual project of HSE FCS students."
+authors = ["Ivan Rotankov, Artemy Kasyanik"]
+license = "MIT"
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+ruff = "^0.13.3"
+isort = "^6.1.0"
+flake8 = "^7.3.0"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
