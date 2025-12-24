@@ -13,9 +13,7 @@ class Config(BaseSettings):
     MINIO_ENDPOINT: str
     MINIO_ACCESS_KEY: str 
     MINIO_SECRET_KEY: str 
-    MINIO_BUCKET: str 
-    MINIO_SECURE: bool 
 
-    model_config = SettingsConfigDict(env_file='.env')
+    model_config = SettingsConfigDict(env_nested_delimiter="__",env_file='.env')
 
 CONFIG = Config()

@@ -1,8 +1,8 @@
 from fastapi import APIRouter, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from backend.src.adapters.uow import UOWManager
 from src.adapters.database.sqlalchemy import make_sqla_session
+from src.adapters.uow import UOWManager
 from src.api.http.v1.middleware import add_exception_handlers
 from src.application.usecase import Usecase
 
