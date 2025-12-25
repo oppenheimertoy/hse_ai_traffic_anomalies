@@ -1,10 +1,10 @@
 from logging.config import fileConfig
 
-from sqlalchemy import create_engine
-from sqlalchemy import pool
-
 from alembic import context
+from sqlalchemy import URL, create_engine, engine_from_config, pool
+from src.adapters.database.models import Base
 from src.adapters.database.sqlalchemy import get_db_dsn
+from src.config import CONFIG
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
@@ -19,12 +19,21 @@ if config.config_file_name is not None:
 # for 'autogenerate' support
 # from myapp import mymodel
 # target_metadata = mymodel.Base.metadata
-target_metadata = None
+target_metadata = Base.metadata
 
 
-def get_sync_db_dsn() -> str:
-    # Alembic uses a sync engine; swap asyncpg for psycopg2.
-    return str(get_db_dsn().set(drivername="postgresql+psycopg2"))
+# Alembic uses a sync engine; swap asyncpg for psycopg2.
+def get_sync_db_url() -> str:
+    """Build a synchronous DSN for Alembic (psycopg2)."""
+    return URL.create(
+        drivername="postgresql+psycopg2",
+        username=CONFIG.POSTGRES_USER,
+        password=CONFIG.POSTGRES_PASSWORD,
+        host=CONFIG.POSTGRES_HOST,
+        port=CONFIG.POSTGRES_PORT,
+        database=CONFIG.POSTGRES_DB,
+    ).render_as_string(hide_password=False)
+
 
 # other values from the config, defined by the needs of env.py,
 # can be acquired:
@@ -44,7 +53,8 @@ def run_migrations_offline() -> None:
     script output.
 
     """
-    url = get_sync_db_dsn()
+    url = get_sync_db_url()
+    print(url)
     context.configure(
         url=url,
         target_metadata=target_metadata,
@@ -63,11 +73,19 @@ def run_migrations_online() -> None:
     and associate a connection with the context.
 
     """
-    connectable = create_engine(get_sync_db_dsn(), poolclass=pool.NullPool)
+    configuration = config.get_section(config.config_ini_section, {})  # type: ignore[arg-type]
+    print(get_sync_db_url())
+    configuration["sqlalchemy.url"] = get_sync_db_url()
+    connectable = engine_from_config(
+        configuration,
+        prefix="sqlalchemy.",
+        poolclass=pool.NullPool,
+    )
 
     with connectable.connect() as connection:
         context.configure(
-            connection=connection, target_metadata=target_metadata, render_as_batch=True
+            connection=connection,
+            target_metadata=target_metadata,
         )
 
         with context.begin_transaction():

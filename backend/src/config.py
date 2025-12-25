@@ -14,6 +14,10 @@ class Config(BaseSettings):
     MINIO_ACCESS_KEY: str 
     MINIO_SECRET_KEY: str 
 
+    JWT_SECRET_KEY: str
+    JWT_ALGORITHM: str = "HS256"
+    JWT_ACCESS_TOKEN_EXPIRE_MINUTES: int = 60
+
     model_config = SettingsConfigDict(env_nested_delimiter="__",env_file='.env')
 
 CONFIG = Config()

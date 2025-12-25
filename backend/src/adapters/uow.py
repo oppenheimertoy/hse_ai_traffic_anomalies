@@ -1,6 +1,7 @@
 from typing import Callable
 
 from sqlalchemy.ext.asyncio import AsyncSession
+from src.adapters.repository.sqlalchemy.user import SqlaUserRepository
 from src.application.uow_manager import AbstractUoWManager
 from src.domain.uow import AbstractUnitOfWork
 
@@ -8,7 +9,7 @@ from src.domain.uow import AbstractUnitOfWork
 class UnitOfWork(AbstractUnitOfWork):
     def __init__(self, sqla_session: AsyncSession) -> None:
         self._sqla_session: AsyncSession = sqla_session
-        # todo: fill with repos
+        self.users = SqlaUserRepository(self._sqla_session)
         
     @property
     def sqla_session(self) -> AsyncSession:
