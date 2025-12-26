@@ -15,4 +15,7 @@ dependencies = [
     "asyncpg>=0.31.0",
     "greenlet>=3.3.0",
     "pyjwt>=2.10.1",
+    "pwdlib[argon2]>=0.3.0",
+    "fernet>=1.0.1",
+    "requests>=2.32.5",
 ]

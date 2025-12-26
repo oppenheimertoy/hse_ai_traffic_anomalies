@@ -33,10 +33,10 @@ run_build :
 run_build_gpu :
 		docker compose -f docker_compose.gpu.yml up
 
-run_dev : 
+run_dev: 
 	docker compose up postgres redis -d
-	. .venv/bin/activate 
-	uv pip install -r requirements.txt
-	alembic upgrade head
+	. .venv/bin/activate && \
+	uv pip install -r requirements.txt && \
+	alembic upgrade head && \
 	uvicorn src.main:app --port 8000 --reload
 	

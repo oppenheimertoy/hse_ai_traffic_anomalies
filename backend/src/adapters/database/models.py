@@ -48,6 +48,7 @@ class User(Base, IDMixin):
     password: Mapped[str] = mapped_column(nullable=False)
 
     roles = relationship("Role", secondary=accounts_roles, back_populates="users")
+    tokens = relationship("UserToken", back_populates="user")
 
 
 class Role(Base, IDMixin):
@@ -55,3 +56,12 @@ class Role(Base, IDMixin):
 
     name: Mapped[str] = mapped_column(nullable=False, unique=True)
     users: Mapped["User"] = relationship(back_populates="roles", secondary=accounts_roles)
+
+class UserToken(Base, IDMixin): 
+    __tablename__ = "tokens"
+
+    user_id: Mapped[UUID] = mapped_column(ForeignKey('accounts.id'),nullable=False)
+    token: Mapped[str] = mapped_column(nullable=False, unique=True)
+    expires_at: Mapped[datetime] = mapped_column()
+
+    user = relationship("User", back_populates='tokens')

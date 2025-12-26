@@ -10,7 +10,8 @@ class SqlaUserRepository(BaseCrudRepository[User], AbstractUserRepository):
 
     @classmethod
     def map(cls, obj: User) -> entity.User:
-        val = entity.User(
+        print(obj)
+        return entity.User(
             id=obj.id,
             username=obj.username,
             password=obj.password,
@@ -19,13 +20,11 @@ class SqlaUserRepository(BaseCrudRepository[User], AbstractUserRepository):
             deleted=obj.deleted,
             deleted_at=obj.deleted_at,
         )
-        print(val)
-        return val
 
     async def get_by_username(self, username: str) -> entity.User | None:
         query = select(self.model).where(self.model.username == username)
         result = await self._session.execute(query)
-        user = result.scalars().one_or_none()
+        user = result.scalar()
         if user:
             return self.map(user)
         return None
