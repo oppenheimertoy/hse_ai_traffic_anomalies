@@ -1,4 +1,4 @@
-import { Box, Button, HStack, SegmentGroup, Spacer } from "@chakra-ui/react"
+import { Box, Button, HStack, Spacer } from "@chakra-ui/react"
 import { useState } from "react"
 import MainPage from "./pages/main"
 import HistoryPage from "./pages/history"
@@ -26,13 +26,12 @@ export const Layout: React.FC<LayoutProps> = () => {
       index: 1,
       title: "History",
       component: <HistoryPage />
-    }
+    },
   ]
 
 
   const [selectedPage, setSelectedPage] = useState<SelectedPage>(pages[0])
   const [isAccountPage, setIsAccountPage] = useState<boolean>(false)
-  
   const handlePageSelection = (index: number) => {
     setSelectedPage(pages[index])
     setIsAccountPage(false)

@@ -22,17 +22,28 @@ export default tseslint.config([
       "react-refresh/only-export-components": "warn",
       "@stylistic/jsx-max-props-per-line": ["error", { maximum: 1 }],
       "@stylistic/jsx-first-prop-new-line": ["error", "multiline"],
-      "@stylistic/jsx-newline": [""],
-
+      "@stylistic/function-call-argument-newline": ["error", "consistent"],
       "@stylistic/jsx-newline": [
         "error",
         { prevent: true, allowMultilines: true },
       ],
-
       "@stylistic/jsx-one-expression-per-line": ["error", { allow: "literal" }],
-
       "@stylistic/semi": ["error", "never"],
+      "@stylistic/function-paren-newline": ["error", { minItems: 3 }],
       "@stylistic/multiline-ternary": ["error", "always-multiline"],
+      "@stylistic/member-delimiter-style": [
+        "warn",
+        {
+          multiline: {
+            delimiter: "none",
+            requireLast: false,
+          },
+          singleline: {
+            delimiter: "comma",
+            requireLast: false,
+          },
+        },
+      ],
     },
     languageOptions: {
       ecmaVersion: 2020,

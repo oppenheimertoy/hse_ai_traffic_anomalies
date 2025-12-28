@@ -54,30 +54,32 @@ async def login_for_access_token(
     )
 
 
-@auth_router.post("/refresh")
-async def refresh_access_token(
-    ref: auth_dto.RefreshToken,
-    usecase: Annotated[Usecase, Depends(make_usecase)],
-) -> schemas.Token:
-    credentials = usecase.auth_service.get_credentials(ref.token)
-    access_token = usecase.auth_service.create_access_token(
-        credentials.username, credentials.user_id
-    )
-    refresh_token = usecase.auth_service.create_refresh_token(
-        credentials.username, credentials.user_id
-    )
-    return schemas.Token(
-        access_token=access_token,
-        refresh_token=refresh_token,
-        token_type="jwt",
-    )
+# @auth_router.post("/refresh")
+# async def refresh_access_token(
+#     ref: auth_dto.RefreshToken,
+#     usecase: Annotated[Usecase, Depends(make_usecase)],
+# ) -> schemas.Token:
+#     credentials = usecase.auth_service.get_credentials(ref.token)
+#     access_token = usecase.auth_service.create_access_token(
+#         credentials.username, credentials.user_id
+#     )
+#     refresh_token = usecase.auth_service.create_refresh_token(
+#         credentials.username, credentials.user_id
+#     )
+#     return schemas.Token(
+#         access_token=access_token,
+#         refresh_token=refresh_token,
+#         token_type="jwt",
+#     )
 
 
 @user_router.get("/me")
 async def read_users_me(
     request: Request,
+    usecase: Annotated[Usecase, Depends(make_usecase)],
 ) -> schemas.User:
-    return schemas.User.model_validate(request.state.user)
+    return await usecase.get_user_by_username(request.state.username)
+
 
 
 @api_router.get("/test")
