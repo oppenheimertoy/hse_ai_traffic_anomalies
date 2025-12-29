@@ -3,6 +3,7 @@ import { User } from "../types/user"
 
 const accountURL = "users/me"
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const convertResponseToUser = (res: any): User => {
   return {
     id: res.id,

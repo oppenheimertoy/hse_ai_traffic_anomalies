@@ -1,12 +1,11 @@
-import { Box, Button, HStack, Spacer } from "@chakra-ui/react"
+import { Box, Button, HStack, Menu, Portal, Spacer } from "@chakra-ui/react"
 import { useState } from "react"
 import MainPage from "./pages/main"
 import HistoryPage from "./pages/history"
 import AccountPage from "./pages/account"
+import { MdAccountCircle } from "react-icons/md"
 
-type LayoutProps = {
-  children?: React.ReactNode
-}
+
 
 type SelectedPage = {
   index: number
@@ -14,7 +13,7 @@ type SelectedPage = {
   component: React.ReactNode
 }
 
-export const Layout: React.FC<LayoutProps> = () => {
+export const Layout: React.FC = () => {
   const pages: SelectedPage[] = [
     {
       index: 0,
@@ -30,6 +29,7 @@ export const Layout: React.FC<LayoutProps> = () => {
   ]
 
 
+
   const [selectedPage, setSelectedPage] = useState<SelectedPage>(pages[0])
   const [isAccountPage, setIsAccountPage] = useState<boolean>(false)
   const handlePageSelection = (index: number) => {
@@ -37,19 +37,29 @@ export const Layout: React.FC<LayoutProps> = () => {
     setIsAccountPage(false)
   }
 
-  const handleAccountPageSelection = () => {
-    setIsAccountPage(true)
+  const handleAccountMenuSelection = (d: string) => {
+    switch (d) {
+      case 'logout':
+        return
+      case 'profile':
+        setIsAccountPage(true)
+        return
+      default:
+        return
+    }
   }
+
   return <Box p='4'>
     <Box
       bg={'gray.100'}
-      borderRadius='2xl'
+      borderRadius='xl'
       p='2'>
       <HStack>
         {
           pages.map(page => <Button
             variant={'outline'}
             bg='white'
+
             onClick={() => handlePageSelection(page.index)}>
             {page.title}
           </Button>)
@@ -57,12 +67,33 @@ export const Layout: React.FC<LayoutProps> = () => {
 
         <Spacer />
 
-        <Button
-          onClick={handleAccountPageSelection}
-          variant={'outline'}
-          bg='white'>
-          Account
-        </Button>
+        <Menu.Root onSelect={(d) => handleAccountMenuSelection(d.value)}>
+          <Menu.Trigger asChild>
+            <Button
+              variant={'outline'}
+              bg='white'>
+              <MdAccountCircle />
+            </Button>
+          </Menu.Trigger>
+
+          <Portal>
+            <Menu.Positioner>
+              <Menu.Content>
+                <Menu.Item value="profile">
+                  Profile
+                </Menu.Item>
+
+                <Menu.Item
+                  value='logout'
+                  color={'fg.error'}
+                  disabled
+                  _hover={{ bg: 'bg.error', color: 'fg.error' }}>
+                  Log out
+                </Menu.Item>
+              </Menu.Content>
+            </Menu.Positioner>
+          </Portal>
+        </Menu.Root>
       </HStack>
     </Box>
 

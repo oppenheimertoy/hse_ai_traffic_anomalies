@@ -5,6 +5,7 @@ from fastapi import APIRouter, Depends, File, HTTPException, Request, UploadFile
 from fastapi.security import OAuth2PasswordRequestForm
 
 import src.domain.auth.dto as auth_dto
+import src.domain.auth.entity as auth_entity
 import src.domain.user.dto as user_dto
 from src.api.http.v1 import schemas
 from src.application.usecase import Usecase
@@ -13,6 +14,7 @@ from src.deps import make_usecase
 api_router = APIRouter(prefix="/v1")
 auth_router = APIRouter(prefix="/auth")
 user_router = APIRouter(prefix="/users")
+token_router = APIRouter(prefix="/tokens")
 
 
 @api_router.get("/health")
@@ -33,7 +35,7 @@ async def register_user(
 async def login_for_access_token(
     form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
     usecase: Annotated[Usecase, Depends(make_usecase)],
-) -> schemas.Token:
+) -> schemas.JWTToken:
     dto = user_dto.UserLoginDTO(
         username=form_data.username,
         password=form_data.password,
@@ -42,35 +44,17 @@ async def login_for_access_token(
         dto,
     )
     access_token = usecase.auth_service.create_access_token(
-        username=user.username, user_id=str(user.id),
+        username=user.username,
+        user_id=str(user.id),
     )
     refresh_token = usecase.auth_service.create_refresh_token(
-        username=user.username, user_id=str(user.id),
+        username=user.username,
+        user_id=str(user.id),
     )
-    return schemas.Token(
+    return schemas.JWTToken(
         access_token=access_token,
         refresh_token=refresh_token,
-        token_type="jwt",
     )
-
-
-# @auth_router.post("/refresh")
-# async def refresh_access_token(
-#     ref: auth_dto.RefreshToken,
-#     usecase: Annotated[Usecase, Depends(make_usecase)],
-# ) -> schemas.Token:
-#     credentials = usecase.auth_service.get_credentials(ref.token)
-#     access_token = usecase.auth_service.create_access_token(
-#         credentials.username, credentials.user_id
-#     )
-#     refresh_token = usecase.auth_service.create_refresh_token(
-#         credentials.username, credentials.user_id
-#     )
-#     return schemas.Token(
-#         access_token=access_token,
-#         refresh_token=refresh_token,
-#         token_type="jwt",
-#     )
 
 
 @user_router.get("/me")
@@ -79,7 +63,6 @@ async def read_users_me(
     usecase: Annotated[Usecase, Depends(make_usecase)],
 ) -> schemas.User:
     return await usecase.get_user_by_username(request.state.username)
-
 
 
 @api_router.get("/test")
@@ -105,5 +88,26 @@ async def recieve_pcap_file(
     return await usecase.forward_pcap(pcap)
 
 
+@token_router.post("/")
+async def create_basic_token(
+    request: Request,
+    usecase: Annotated[Usecase, Depends(make_usecase)],
+    payload: schemas.TokenCreate,
+) -> auth_entity.Token:
+    user_id = request.state.user_id
+    return await usecase.create_user_token(
+        auth_dto.TokenCreateDTO(user_id=user_id, expires_at=payload.expires_at, token=None),
+    )
+
+
+@token_router.get("/")
+async def get_all_tokens(
+    request: Request,
+    usecase: Annotated[Usecase, Depends(make_usecase)],
+) -> list[auth_entity.Token]:
+    tokens = await usecase.get_user_tokens(user_id=request.state.user_id)
+    return tokens
+
+user_router.include_router(token_router)
 api_router.include_router(auth_router)
 api_router.include_router(user_router)
