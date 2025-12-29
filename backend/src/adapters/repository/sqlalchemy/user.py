@@ -10,7 +10,6 @@ class SqlaUserRepository(BaseCrudRepository[User], AbstractUserRepository):
 
     @classmethod
     def map(cls, obj: User) -> entity.User:
-        print(obj)
         return entity.User(
             id=obj.id,
             username=obj.username,

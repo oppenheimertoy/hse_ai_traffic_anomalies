@@ -5,13 +5,15 @@ from uuid import UUID
 from src.domain.entity import BaseEntity
 from src.domain.user.entity import User
 
+
 @dataclass(frozen=True)
 class Credentials:
     user_id: UUID
     username: str
 
-@dataclass(frozen=True)
+@dataclass
 class Token(BaseEntity):
     user_id: UUID
-    user: User
+    token: str
     expires_at: datetime
+    user: User | None = None

@@ -18,8 +18,10 @@ class User(Base):
     username: str
 
 
-class Token(BaseModel):
+class JWTToken(BaseModel):
     access_token: str
     refresh_token: str
-    token_type: str
-    
+
+class TokenCreate(BaseModel): 
+
+    expires_at: datetime

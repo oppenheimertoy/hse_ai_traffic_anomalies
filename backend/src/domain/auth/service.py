@@ -1,16 +1,19 @@
 import abc
+import uuid
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
-from typing import Any, Dict
+from typing import Any, Dict, List
 
 import jwt
+import src.domain.auth.dto as auth_dto
 from cryptography.fernet import Fernet
 from src.adapters.database.sqlalchemy import make_sqla_session
 from src.adapters.repository.sqlalchemy.token import SqlaTokenRepository
+from src.adapters.repository.sqlalchemy.user import SqlaUserRepository
 from src.config import CONFIG
 from src.domain.auth import entity
 from src.domain.auth.errors import TokenExpiredError, TokenNotFoundError
-
+from src.domain.uow import AbstractUnitOfWork
 
 ACCESS_TOKEN_TYPE = "access_token"
 REFRESH_TOKEN_TYPE = "refresh_token"
@@ -132,12 +135,16 @@ class BasicAuthenticationStrategy(AbstractAuthenticationStrategy):
 
     async def get_credentials(self, token: str) -> entity.Credentials:
         session = make_sqla_session()
-        repo = SqlaTokenRepository(session=session)
-        token: entity.Token = await repo.get_by_token_value(token)
+        token_repo = SqlaTokenRepository(session=session)
+        token: entity.Token = await token_repo.get_by_token_value(token)
+        
         if not token:
             raise TokenNotFoundError()
         if token.expires_at < datetime.now():
             raise TokenExpiredError()
+        user_repo = SqlaUserRepository(session=session)
+        user = await user_repo.get(token.user_id)
+        token.user = user
         return entity.Credentials(token.user_id, token.user.username)
 
 
@@ -166,3 +173,9 @@ class AuthService:
             return BasicAuthenticationStrategy()
         else:
             return JWTAuthenticationStrategy()
+
+    async def create_basic_token(self, uow: AbstractUnitOfWork, dto: auth_dto.TokenCreateDTO) -> entity.Token: 
+        return await uow.tokens.create(dto)
+    
+    async def get_user_tokens(self, uow: AbstractUnitOfWork, user_id: uuid.UUID) -> List[entity.Token]: 
+        return await uow.tokens.get_by_user(user_id=user_id)

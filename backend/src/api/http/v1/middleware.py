@@ -2,6 +2,7 @@ from typing import Callable, Iterable
 
 from fastapi import FastAPI, Request, status
 from fastapi.responses import JSONResponse
+import jwt
 from jwt.exceptions import DecodeError, ExpiredSignatureError
 from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint
 from starlette.responses import Response
@@ -57,14 +58,16 @@ class JwtAuthMiddleware(BaseHTTPMiddleware):
             )
             request.state.user_id = credentials.user_id
             request.state.username = credentials.username
-        except TokenExpiredError:
+        except jwt.ExpiredSignatureError or TokenExpiredError as exc:
             if auth_method.strip().lower() != "bearer":
                 return self._unauthorized("Token is expired", "BASIC")
             refresh_token = request.headers.get(
                 "Refresh-Token",
             ) or request.cookies.get("refresh_token")
             if not refresh_token:
-                return self._unauthorized("Access token expired.", "JWt")
+                return self._unauthorized("Access token expired.", "JWT")
+            if 'Bearer' in refresh_token: 
+                refresh_token = refresh_token.split(" ")[1]
             try:
                 creds: Credentials = await self._authentication_service.authenticate(
                     method="Bearer",
@@ -72,6 +75,8 @@ class JwtAuthMiddleware(BaseHTTPMiddleware):
                 )
             except (DecodeError, TokenNotFoundError) as exc:
                 return self._unauthorized(f"Invalid refresh token. {exc}", 'JWT')
+            request.state.user_id = creds.user_id
+            request.state.username = creds.username
             request.state.new_access_token = self._authentication_service.create_access_token(
                 username=creds.username,
                 user_id=creds.user_id,
@@ -88,6 +93,8 @@ class JwtAuthMiddleware(BaseHTTPMiddleware):
         new_refresh_token = getattr(request.state, "new_refresh_token", None)
         if new_access_token:
             response.headers["X-Access-Token"] = new_access_token
+        if new_refresh_token: 
+            response.headers["X-Refresh-Token"] = new_refresh_token
         return response
 
     def _unauthorized(self, detail: str, method: str) -> JSONResponse:

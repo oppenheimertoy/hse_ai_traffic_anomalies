@@ -1,4 +1,5 @@
 import abc
+from typing import List
 from uuid import UUID
 
 from src.domain.auth import entity
@@ -6,7 +7,7 @@ from src.domain.auth import entity
 
 class AbstractTokenRepository(abc.ABC): 
     @abc.abstractmethod
-    async def get_by_user(self, user_id: UUID) -> entity.Token:
+    async def get_by_user(self, user_id: UUID) -> List[entity.Token]:
         ...
 
     @abc.abstractmethod

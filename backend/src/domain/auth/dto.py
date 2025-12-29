@@ -1,14 +1,10 @@
+import datetime
+import uuid
+
 from src.domain.dto import BaseDTO
 
 
-    
-
-class AccessToken(BaseDTO):
-    token: str
-
-class RefreshToken(BaseDTO):
-    token: str
-    
-class Token(BaseDTO):
-    access: AccessToken
-    token: RefreshToken
+class TokenCreateDTO(BaseDTO):
+    expires_at: datetime.datetime
+    user_id: uuid.UUID
+    token: str | None
