@@ -2,8 +2,9 @@ import { authenticatedRequest } from "../../../services/authFetch"
 import { Token } from "../types/token"
 
 const tokensURL = "users/tokens"
-
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const convertResponseToTokens = (res: any): Token[] => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return res.map((t: any) => ({
     id: t.id,
     token: t.token,

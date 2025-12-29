@@ -7,7 +7,7 @@ const tokensURL = "users/tokens"
 const convertResponseToTokens = (res: any): Token => {
   return {
     id: res.id,
-    value: res.value,
+    token: res.token,
     expiresAt: res.expired_at,
     userId: res.user_id,
     createdAt: res.created_at,

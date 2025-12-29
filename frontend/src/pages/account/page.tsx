@@ -2,8 +2,8 @@ import { Box, Button, DataList, Text, Separator, Spinner, HStack, Input } from "
 import { useUser } from "./hooks/useUser"
 import { useTokens } from "./hooks/useTokens"
 import { Token } from "./types/token"
-import { useState } from "react"
-import { CgCopy } from "react-icons/cg"
+import { useRef, useState } from "react"
+import { CgCheck, CgCopy } from "react-icons/cg"
 import {SingleDatepicker} from "chakra-dayzed-datepicker"
 export const Page: React.FC = () => {
   const { user, userStatus } = useUser()
@@ -88,6 +88,12 @@ export const Page: React.FC = () => {
 type TokenBoxProps = { token: Token, index: number }
 
 const TokenBox: React.FC<TokenBoxProps> = ({ token, index }) => {
+  const [isCopied, setIsCopied] = useState(false)
+  const handleTokenCopy = () => {
+    navigator.clipboard.writeText(token.token)
+    setIsCopied(true)
+    setTimeout(() => setIsCopied(false), 3000)
+  }
   return <Box
     bg='gray.100'
     borderRadius={'3xl'}
@@ -99,7 +105,7 @@ const TokenBox: React.FC<TokenBoxProps> = ({ token, index }) => {
         </DataList.ItemLabel>
 
         <DataList.ItemValue>
-          {index.toString()}
+          {(index + 1).toString()}
         </DataList.ItemValue>
       </DataList.Item>
 
@@ -109,16 +115,17 @@ const TokenBox: React.FC<TokenBoxProps> = ({ token, index }) => {
         </DataList.ItemLabel>
 
         <DataList.ItemValue
-          onClick={() => navigator.clipboard.writeText(token.token)}
+          onClick={handleTokenCopy}
           border='dashed'
-          borderColor={'blue.400'}
+          animation={'step-start'}
+          borderColor={!isCopied ? 'blue.400' : 'green.400'}
           borderRadius={'lg'}
           w='fit-content'
           paddingRight={'2'}
           paddingLeft={'2'}
         >
           <HStack justify={'center'}>
-            <CgCopy />
+            {isCopied ? <CgCheck color="green"/> :<CgCopy />}
             {token.token}
           </HStack>
         </DataList.ItemValue>
