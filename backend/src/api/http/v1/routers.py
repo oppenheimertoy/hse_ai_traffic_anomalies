@@ -77,7 +77,8 @@ async def recieve_pcap_file(
 ) -> str:
     if not pcap.filename:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST, detail="Missing file name."
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Missing file name.",
         )
     ext = Path(pcap.filename).suffix.lower()
     if ext not in {".pcap", ".csv"}:
@@ -96,7 +97,9 @@ async def create_basic_token(
 ) -> auth_entity.Token:
     user_id = request.state.user_id
     return await usecase.create_user_token(
-        auth_dto.TokenCreateDTO(user_id=user_id, expires_at=payload.expires_at, token=None),
+        auth_dto.TokenCreateDTO(
+            user_id=user_id, expires_at=payload.expires_at, token=None
+        ),
     )
 
 
@@ -107,6 +110,7 @@ async def get_all_tokens(
 ) -> list[auth_entity.Token]:
     tokens = await usecase.get_user_tokens(user_id=request.state.user_id)
     return tokens
+
 
 user_router.include_router(token_router)
 api_router.include_router(auth_router)

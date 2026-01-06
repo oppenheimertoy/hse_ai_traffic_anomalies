@@ -91,3 +91,8 @@ class Usecase:
                 await self._uow_manager.rollback()
                 await self._uow_manager.clean()
                 raise
+
+    async def forward_pcap(self, pcap): 
+        async with self._uow_manager as uow: 
+            try: 
+                

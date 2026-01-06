@@ -65,3 +65,5 @@ class UserToken(Base, IDMixin):
     expires_at: Mapped[datetime] = mapped_column()
 
     user = relationship("User", back_populates='tokens')
+
+class History(Base, IDMixin): 

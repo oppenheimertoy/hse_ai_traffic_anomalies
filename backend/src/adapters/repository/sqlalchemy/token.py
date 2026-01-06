@@ -3,14 +3,14 @@ import secrets
 import string
 from typing import List
 from uuid import UUID
+
 from sqlalchemy import select
-from src.adapters.repository.sqlalchemy.user import SqlaUserRepository
-from src.adapters.database.models import UserToken, User
+from src.adapters.database.models import UserToken
 from src.adapters.repository.sqlalchemy.base import BaseCrudRepository
-from src.domain.auth.repository import AbstractTokenRepository
 from src.domain.auth import entity as auth_entity
 from src.domain.auth.dto import TokenCreateDTO
-import src.domain.user.entity as user_entity
+from src.domain.auth.repository import AbstractTokenRepository
+
 
 class SqlaTokenRepository(BaseCrudRepository[UserToken], AbstractTokenRepository):
     model = UserToken

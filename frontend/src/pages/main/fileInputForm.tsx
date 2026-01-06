@@ -125,9 +125,9 @@ const FilesList: React.FC<FilesListProps> = ({
             bg='white'
             variant={'outline'}
             onClick={() => removeFile(index)}
-            _hover={{borderColor: 'red.300'}}
+            _hover={{ borderColor: 'red.300' }}
             size={'sm'}>
-            <LuX color='red'/>
+            <LuX color='red' />
           </Button>
         </HStack>
       </Box>)}
