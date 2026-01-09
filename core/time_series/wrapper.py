@@ -63,13 +63,13 @@ class AnomaliesDetector:
         test_df = df.iloc[split_idx:]
         result = {}
         for model in models:
-            if model == "isolation_forest":
+            if model.value == "isolation_forest":
                 result[model] = self._ts_detector.detect_with_isolation_forest_ts(
                     train_df,
                     test_df,
                     feature_cols=feature_cols,
                 )
-            elif model == "arima":
+            elif model.value == "arima":
                 train_series, test_series = self._split_series(
                     df,
                     target_col,
@@ -79,7 +79,7 @@ class AnomaliesDetector:
                     train_series,
                     test_series,
                 )
-            elif model == "sarima":
+            elif model.value == "sarima":
                 train_series, test_series = self._split_series(
                     df,
                     target_col,
@@ -89,7 +89,7 @@ class AnomaliesDetector:
                     train_series,
                     test_series,
                 )
-            elif model == "prophet":
+            elif model.value == "prophet":
                 train_series, test_series = self._split_series(
                     df,
                     target_col,

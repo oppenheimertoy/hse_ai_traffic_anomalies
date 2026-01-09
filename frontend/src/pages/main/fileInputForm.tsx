@@ -4,7 +4,11 @@ import { useForm } from "./hooks/useForm"
 import { bytesToMegabytes } from "../../utils/fileSize"
 
 export const FileInputForm: React.FC = () => {
-  const { files, addFiles, removeFile, clear } = useForm()
+  const { files, addFiles, removeFile, clear, sendFile } = useForm()
+  const handleFileSend = () => {
+    console.log(files)
+    sendFile(files[0])
+  }
   return <Box
     marginTop={'4'}
     p='4'
@@ -71,7 +75,9 @@ export const FileInputForm: React.FC = () => {
 
       variant='outline'
       bg={files.length > 0 ? 'white' : undefined}
-      disabled={files.length === 0}>
+      disabled={files.length === 0}
+      onClick={handleFileSend}
+    >
       <Text>Start</Text>
 
       {files.length > 0 &&
