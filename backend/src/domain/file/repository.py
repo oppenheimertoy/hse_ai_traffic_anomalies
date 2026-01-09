@@ -1,5 +1,5 @@
 import abc
 
 
-class AbstractHistoryRepository(abc.ABC): 
+class AbstractFileRepository(abc.ABC):
     ...

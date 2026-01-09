@@ -1,4 +1,5 @@
 import abc
+import uuid
 from collections.abc import Collection
 from typing import Any, Generic, Self, TypeVar
 
@@ -22,14 +23,18 @@ class BaseCrudRepository(abc.ABC, Generic[_TM]):
 
     async def create(self, dto: Any) -> Any:  # noqa: ANN401
         try:
-            cmd = insert(self.model).values(dto.model_dump(exclude_unset=True)).returning(self.model)
+            cmd = (
+                insert(self.model)
+                .values(dto.model_dump(exclude_unset=True))
+                .returning(self.model)
+            )
             result = await self._session.execute(cmd)
 
             obj = result.unique().scalar_one()
         except exc.IntegrityError as e:
             raise errors.IntegrityError(str(e.orig))
         return self.map(obj)
-    
+
     async def create_many(self, create_dtos: Collection[Any]) -> list[Any]:
         if not create_dtos:
             return []
@@ -55,7 +60,7 @@ class BaseCrudRepository(abc.ABC, Generic[_TM]):
 
         return self.map(obj)
 
-    async def update(self, id: str, dto: Any) -> Any: 
+    async def update(self, id: uuid.UUID, dto: Any) -> Any:
         query = select(self.model).filter_by(id=id)
         result = await self._session.execute(query)
         obj = result.unique().scalar_one_or_none()
@@ -77,7 +82,7 @@ class BaseCrudRepository(abc.ABC, Generic[_TM]):
             raise errors.IntegrityError(str(e.orig))
         return self.map(obj)
 
-    async def delete(self, id: str) -> bool: 
+    async def delete(self, id: str) -> bool:
         query = select(self.model).filter_by(id=id)
         result = await self._session.execute(query)
         obj = result.unique().scalar_one_or_none()

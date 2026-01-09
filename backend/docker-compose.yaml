@@ -1,5 +1,5 @@
 services:
-  postgres: 
+  postgres:
     image: postgres:15
     environment:
       POSTGRES_USER: postgres
@@ -10,31 +10,29 @@ services:
     volumes:
       - "postgres_data:/var/lib/postgresql/data"
     healthcheck:
-      test: [ "CMD" ,"pg_isready", "-d", "postgres" ]
+      test: ["CMD", "pg_isready", "-d", "postgres"]
       interval: 5s
       timeout: 30s
       retries: 50
     restart: unless-stopped
-  web:
+  backend:
     build:
       context: .
       dockerfile: Dockerfiles/service/Dockerfile
       target: development
-    command: [ "python"  , "-m", "fastapi_service" ]
-    environment:
-      DEBUG: 'True'
-      SETTINGS_LOG_FILE: 'True'
+    command: ["python", "-m", "fastapi_service"]
+    env_file:
+      - ./backend/.env.stage
     volumes:
-      - "./fastapi_service:/src/fastapi_service"
+      - backend_data:/data
     ports:
       - "8000:8000"
-    env_file:
-      - ./.env
     depends_on:
       redis:
         condition: service_healthy
+      
     healthcheck:
-      test: [ "CMD" ,"nc", "-vz", "-w1", "localhost", "8000" ]
+      test: ["CMD", "nc", "-vz", "-w1", "localhost", "8000"]
       interval: 5s
       timeout: 20s
       retries: 100
@@ -42,19 +40,33 @@ services:
 
   redis:
     image: redis:latest
-    ports: 
-       - "6379:6379"
+    ports:
+      - "6379:6379"
     volumes:
       - "redis_data:/bitnami/redis/data"
     healthcheck:
-      test: [ "CMD", "redis-cli", "ping" ]
+      test: ["CMD", "redis-cli", "ping"]
       interval: 5s
       timeout: 30s
       retries: 50
     restart: unless-stopped
-
+  minio:
+    image: minio/minio:latest
+    command: server --console-address ":9001" /data
+    environment:
+      MINIO_ROOT_USER: minio_admin
+      MINIO_ROOT_PASSWORD: minio_admin
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - minio_data:/data
 volumes:
   redis_data:
     driver: local
-  postgres_data: 
+  postgres_data:
+    driver: local
+  minio_data: 
+    driver: local
+  backend_data:
     driver: local

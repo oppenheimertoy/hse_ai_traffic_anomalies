@@ -7,6 +7,7 @@ from fastapi.security import OAuth2PasswordRequestForm
 import src.domain.auth.dto as auth_dto
 import src.domain.auth.entity as auth_entity
 import src.domain.user.dto as user_dto
+from backend.src.domain.file.dto import FileCreateDTO
 from src.api.http.v1 import schemas
 from src.application.usecase import Usecase
 from src.deps import make_usecase
@@ -72,9 +73,10 @@ async def test_token() -> bool:
 
 @api_router.post("/forward")
 async def recieve_pcap_file(
+    request: Request,
     usecase: Annotated[Usecase, Depends(make_usecase)],
     pcap: UploadFile = File(...),
-) -> str:
+) -> schemas.History:
     if not pcap.filename:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -86,7 +88,9 @@ async def recieve_pcap_file(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Only .pcap or .csv files are allowed.",
         )
-    return await usecase.forward_pcap(pcap)
+    user_id = request.state.user_id
+    dto = FileCreateDTO(file=await pcap.read(), user_id=user_id)
+    return await usecase.forward_pcap(dto)
 
 
 @token_router.post("/")
@@ -98,7 +102,9 @@ async def create_basic_token(
     user_id = request.state.user_id
     return await usecase.create_user_token(
         auth_dto.TokenCreateDTO(
-            user_id=user_id, expires_at=payload.expires_at, token=None
+            user_id=user_id,
+            expires_at=payload.expires_at,
+            token=None,
         ),
     )
 

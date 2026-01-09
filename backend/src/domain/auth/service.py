@@ -134,18 +134,18 @@ class BasicAuthenticationStrategy(AbstractAuthenticationStrategy):
     auth_method = BasicAuthMethod.Authorization
 
     async def get_credentials(self, token: str) -> entity.Credentials:
-        session = make_sqla_session()
-        token_repo = SqlaTokenRepository(session=session)
-        token: entity.Token = await token_repo.get_by_token_value(token)
-        
-        if not token:
-            raise TokenNotFoundError()
-        if token.expires_at < datetime.now():
-            raise TokenExpiredError()
-        user_repo = SqlaUserRepository(session=session)
-        user = await user_repo.get(token.user_id)
-        token.user = user
-        return entity.Credentials(token.user_id, token.user.username)
+        async with make_sqla_session() as session:
+            token_repo = SqlaTokenRepository(session=session)
+            token: entity.Token = await token_repo.get_by_token_value(token)
+
+            if not token:
+                raise TokenNotFoundError()
+            if token.expires_at < datetime.now():
+                raise TokenExpiredError()
+            user_repo = SqlaUserRepository(session=session)
+            user = await user_repo.get(token.user_id)
+            token.user = user
+            return entity.Credentials(token.user_id, token.user.username)
 
 
 class AuthService:
