@@ -48,5 +48,6 @@ def make_app(api_router: APIRouter) -> FastAPI:
         allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],
+        expose_headers=["X-Access-Token", "X-Refresh-Token"],
     )
     return app
