@@ -20,6 +20,5 @@ const convertResponseToTokens = (res: any): Token[] => {
 export const fetchTokensData = async () => {
   const data = await authenticatedRequest("GET", tokensURL,)
   const target = convertResponseToTokens(data)
-  console.log(target)
   return target
 }

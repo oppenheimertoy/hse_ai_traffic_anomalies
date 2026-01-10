@@ -1,7 +1,6 @@
 import { authenticatedRequest } from "../../../services/authFetch"
 import { AnalyzedFile } from "../types/analyzedFile"
-
-const filesURL = "forward"
+const filesURL = "history"
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const convertResponseToAnalyzedFile = (res: any): AnalyzedFile => {
@@ -19,15 +18,10 @@ const convertResponseToAnalyzedFile = (res: any): AnalyzedFile => {
   }
 }
 
-export const sendFile = async (file: File): Promise<AnalyzedFile> => {
-  const formData = new FormData()
-  formData.append(
-    "pcap", file, file.name
-  )
+export const pollFiles = async (files: AnalyzedFile[]) => {
+  const preparedBody = {ids: files.map(file => file.id)}
   const res = await authenticatedRequest(
-    "POST",
-    filesURL,
-    formData
+    "POST", filesURL, JSON.stringify(preparedBody)
   )
-  return convertResponseToAnalyzedFile(res)
+  return (await res).map(convertResponseToAnalyzedFile)
 }

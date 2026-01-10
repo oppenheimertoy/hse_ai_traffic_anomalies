@@ -2,6 +2,7 @@ import enum
 import tempfile
 from typing import Any, Dict
 
+import numpy as np
 import pandas as pd
 import requests
 
@@ -52,10 +53,10 @@ class AnomaliesDetector:
             df = self._pcap_converter.convert(tmp.name)
 
         if df.empty:
-            return {"data": df, "result": None}
+            return self._serialize_result({"data": df, "result": None})
 
         if len(df) < 2:
-            return {"data": df, "result": None}
+            return self._serialize_result({"data": df, "result": None})
 
         split_idx = int(len(df) * train_ratio)
         split_idx = min(max(1, split_idx), len(df) - 1)
@@ -64,7 +65,7 @@ class AnomaliesDetector:
         result = {}
         for model in models:
             if model.value == "isolation_forest":
-                result[model] = self._ts_detector.detect_with_isolation_forest_ts(
+                result[model.value] = self._ts_detector.detect_with_isolation_forest_ts(
                     train_df,
                     test_df,
                     feature_cols=feature_cols,
@@ -75,7 +76,7 @@ class AnomaliesDetector:
                     target_col,
                     split_idx,
                 )
-                result[model] = self._ts_detector.detect_with_arima(
+                result[model.value] = self._ts_detector.detect_with_arima(
                     train_series,
                     test_series,
                 )
@@ -85,7 +86,7 @@ class AnomaliesDetector:
                     target_col,
                     split_idx,
                 )
-                result[model] = self._ts_detector.detect_with_sarima(
+                result[model.value] = self._ts_detector.detect_with_sarima(
                     train_series,
                     test_series,
                 )
@@ -95,14 +96,13 @@ class AnomaliesDetector:
                     target_col,
                     split_idx,
                 )
-                result[model] = self._ts_detector.detect_with_prophet(
+                result[model.value] = self._ts_detector.detect_with_prophet(
                     train_series,
                     test_series,
                 )
             else:
                 raise ValueError(f"unknown model: {model}")  # noqa: TRY003
-
-        return {"data": df, "result": result}
+        return self._serialize_result(result)
 
     @staticmethod
     def _split_series(
@@ -116,3 +116,31 @@ class AnomaliesDetector:
         series = df[target_col]
         series.index = df["timestamp"]
         return series.iloc[:split_idx], series.iloc[split_idx:]
+
+    @staticmethod
+    def _serialize_result(payload: Any) -> dict[str, Any]:
+        def to_jsonable(value: Any) -> Any:
+            if isinstance(value, pd.DataFrame):
+                return value.to_dict(orient="records")
+            if isinstance(value, pd.Series):
+                return [
+                    {"timestamp": str(idx), "value": to_jsonable(val)}
+                    for idx, val in value.items()
+                ]
+            if isinstance(value, np.ndarray):
+                return [to_jsonable(v) for v in value.tolist()]
+            if isinstance(value, np.generic):
+                return value.item()
+            if isinstance(value, pd.Timestamp):
+                return value.isoformat()
+            if isinstance(value, dict):
+                return {
+                    str(k): to_jsonable(v)
+                    for k, v in value.items()
+                    if k != "model"
+                }
+            if isinstance(value, (list, tuple)):
+                return [to_jsonable(v) for v in value]
+            return value
+
+        return to_jsonable(payload)

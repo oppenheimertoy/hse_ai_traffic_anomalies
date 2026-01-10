@@ -38,7 +38,6 @@ class FileService:
         file_id = uuid.uuid4()
         user = await uow.users.get(file_dto.user_id)
         file_url = await self.__put_pcap_file(storage, str(file_id), file_dto.file)
-        print(file_url)
         file_dto.file_url = file_url
         return await uow.files.create(
             file_dto,

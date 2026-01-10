@@ -133,10 +133,14 @@ class Usecase:
                     uow,
                     history_dto,
                 )
-                await self._uow_manager.commit()    
+                await self._uow_manager.commit()
                 await self.history_service.push_history_to_queue(history)
             except:
                 await self._uow_manager.rollback()
                 await self._uow_manager.clean()
                 raise
             return history
+
+    async def get_history_items(self, ids: List[uuid.UUID]) -> List[history_entity.History]:
+        async with self._uow_manager as uow:
+            return await self.history_service.list_histories(uow, ids)

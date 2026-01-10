@@ -1,4 +1,4 @@
-from typing import Callable
+from typing import Callable, List
 from uuid import UUID
 
 import src.domain.history.entity as entity
@@ -33,7 +33,12 @@ class HistoryService:
         create_dto: HistoryCreateDTO,
     ) -> entity.History:
         return await uow.history.create(create_dto)
-
+    async def list_histories(
+            self, 
+            uow: AbstractUnitOfWork,
+            ids: List[UUID] | None = None,
+    ) -> List[entity.History]:
+        return await uow.history.get_multiple(ids)
     async def process_job(
         self,
         job: AnalysisJob,
@@ -64,7 +69,7 @@ class HistoryService:
             raise FileProcessingError
 
         async with uow_manager as uow:
-            update_dto.result = str(detector_results)
+            update_dto.result = detector_results
             update_dto.status = HistoryStatus.DONE.value
             await uow.history.update(update_dto.id, update_dto)
             await uow_manager.commit()

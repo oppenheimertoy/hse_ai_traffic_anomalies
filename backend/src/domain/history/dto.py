@@ -22,4 +22,4 @@ class HistoryUpdateDTO(BaseDTO):
     error: str | None
     user_id: uuid.UUID
     status: str
-    result: str | None
+    result: dict | None

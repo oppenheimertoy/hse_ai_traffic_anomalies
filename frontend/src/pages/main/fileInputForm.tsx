@@ -1,13 +1,20 @@
 import { Text, Box, Button, FileUpload, HStack, Spinner, Separator, VStack } from "@chakra-ui/react"
 import { LuDelete, LuFileCog, LuX } from "react-icons/lu"
-import { useForm } from "./hooks/useForm"
 import { bytesToMegabytes } from "../../utils/fileSize"
 
-export const FileInputForm: React.FC = () => {
-  const { files, addFiles, removeFile, clear, sendFile } = useForm()
+type FileInputFormProps = {
+  sendAllFiles: () => void
+  addFiles: (files: File[]) => void
+  files: File[]
+  clear: () => void
+  removeFile: (index: number) => void
+}
+
+export const FileInputForm: React.FC<FileInputFormProps> = ({
+  sendAllFiles, addFiles, files, clear, removeFile
+}) => {
   const handleFileSend = () => {
-    console.log(files)
-    sendFile(files[0])
+    sendAllFiles()
   }
   return <Box
     marginTop={'4'}
@@ -69,10 +76,8 @@ export const FileInputForm: React.FC = () => {
       </FileUpload.Trigger>
     </FileUpload.Root>
 
-    <Separator p='2' />
-
     <Button
-
+      marginTop="4"
       variant='outline'
       bg={files.length > 0 ? 'white' : undefined}
       disabled={files.length === 0}

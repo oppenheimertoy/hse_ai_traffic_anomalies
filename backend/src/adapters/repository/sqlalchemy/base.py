@@ -1,7 +1,7 @@
 import abc
 import uuid
 from collections.abc import Collection
-from typing import Any, Generic, Self, TypeVar
+from typing import Any, Generic, List, Self, TypeVar
 
 from sqlalchemy import exc, func, insert, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -59,6 +59,14 @@ class BaseCrudRepository(abc.ABC, Generic[_TM]):
             raise errors.NotFoundError(msg)
 
         return self.map(obj)
+    
+    async def get_multiple(self, obj_ids: List[uuid.UUID]) -> List[Any]:  
+        if not obj_ids:
+            return []
+        query = select(self.model).where(self.model.id.in_(list(obj_ids)))
+        result = await self._session.execute(query)
+        objs = result.unique().scalars().all()
+        return [self.map(obj) for obj in objs]
 
     async def update(self, id: uuid.UUID, dto: Any) -> Any:
         query = select(self.model).filter_by(id=id)

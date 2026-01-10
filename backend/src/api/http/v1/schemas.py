@@ -40,3 +40,6 @@ class History(Base):
     file_url: str | None
     result: dict | None
     error: str | None
+
+class HistoryIds(BaseModel): 
+    ids: list[UUID] | None = None

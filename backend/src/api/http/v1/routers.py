@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Annotated
+from typing import Annotated, List
 
 from fastapi import APIRouter, Depends, File, HTTPException, Request, UploadFile, status
 from fastapi.security import OAuth2PasswordRequestForm
@@ -92,6 +92,12 @@ async def recieve_pcap_file(
     dto = FileCreateDTO(file=await pcap.read(), user_id=user_id)
     return await usecase.forward_pcap(dto)
 
+@api_router.post('/history')
+async def poll_files_statuses( 
+    usecase: Annotated[Usecase, Depends(make_usecase)],
+    ids: schemas.HistoryIds,
+) -> List[schemas.History]:
+    return await usecase.get_history_items(ids.ids)
 
 @token_router.post("/")
 async def create_basic_token(

@@ -195,6 +195,6 @@ class TimeSeriesAnomalyDetector:
 
         return {
             "anomalies": preds == -1,
-            "anomaly_scores": scores,
+            "anomaly_scores": scores.tolist(),
             "model": model,
         }

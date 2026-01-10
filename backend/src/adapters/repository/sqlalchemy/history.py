@@ -1,3 +1,4 @@
+import json
 import uuid
 from typing import List
 from uuid import UUID
@@ -51,15 +52,28 @@ class SqlaHistoryRepository(BaseCrudRepository[History], AbstractHistoryReposito
         await self._session.refresh(db_obj, ["user"])
         return self.map(db_obj)
 
+    async def get_multiple(
+        self,
+        obj_ids: List[uuid.UUID],
+    ) -> List[history_entity.History]:
+        if not obj_ids:
+            return []
+        query = (
+            select(self.model)
+            .options(selectinload(self.model.file))
+            .where(self.model.id.in_(list(obj_ids)))
+        )
+        result = await self._session.execute(query)
+        objs = result.unique().scalars().all()
+        return [self.map(obj) for obj in objs]
+
     async def update(
         self,
         id: uuid.UUID,
         dto: HistoryUpdateDTO,
     ) -> history_entity.History:
         query = (
-            select(self.model)
-            .options(selectinload(self.model.file))
-            .filter_by(id=id)
+            select(self.model).options(selectinload(self.model.file)).filter_by(id=id)
         )
         result = await self._session.execute(query)
         obj = result.unique().scalar_one_or_none()
@@ -79,7 +93,9 @@ class SqlaHistoryRepository(BaseCrudRepository[History], AbstractHistoryReposito
         return self.map(obj)
 
     async def update_status(
-        self, id: UUID, history_status: str,
+        self,
+        id: UUID,
+        history_status: str,
     ) -> history_entity.History:
         query = (
             select(self.model)
