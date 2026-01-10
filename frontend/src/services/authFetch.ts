@@ -17,9 +17,11 @@ export const authenticatedRequest = async (
 
   if (authToken === null || authToken.length === 0) throw "no token provided"
   try {
-    const headers = {
-      "Content-Type": "application/json",
+    const headers: Record<string, string> = {
       "Authorization": "Bearer " + authToken,
+    }
+    if (!(body instanceof FormData) && body !== undefined) {
+      headers["Content-Type"] = "application/json"
     }
     const res = await fetch(new URL(url, API_V1_URL), {
       method: method,
@@ -32,11 +34,14 @@ export const authenticatedRequest = async (
     if (error) {
       const refreshToken = store.getRefreshToken()
       if (refreshToken === null || refreshToken.length === 0) throw new Error("auth was revoked") as UnauthorizedError
-      const headers = {
-        "Content-Type": "application/json",
+      const headers: Record<string, string> = {
         "Authorization": "Bearer " + authToken,
         "Refresh-Token": "Bearer " + refreshToken,
       }
+      if (!(body instanceof FormData) && body !== undefined) {
+        headers["Content-Type"] = "application/json"
+      }
+      
       const res = await fetch(new URL(url, API_V1_URL), {
         method: method,
         body: body,

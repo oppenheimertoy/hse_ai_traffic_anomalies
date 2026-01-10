@@ -1,0 +1,20 @@
+[project]
+name = "core"
+version = "0.1.0"
+description = "Core time series anomaly detection"
+requires-python = ">=3.13.5"
+dependencies = [
+    "pandas>=2.3.3",
+    "requests>=2.32.5",
+    "dpkt>=1.9.8",
+    "numpy>=2.4.0",
+    "scikit-learn>=1.8.0",
+    "statsmodels>=0.14.6",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["time_series"]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"

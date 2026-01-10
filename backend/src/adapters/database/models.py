@@ -1,7 +1,7 @@
 from datetime import datetime
 from uuid import UUID, uuid4
 
-from sqlalchemy import Column, ForeignKey, Table, func
+from sqlalchemy import JSON, Column, ForeignKey, Table, func
 from sqlalchemy import UUID as SAUUID
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
@@ -25,13 +25,13 @@ class Base(DeclarativeBase):
 
 class IDMixin:
     id: Mapped[UUID] = mapped_column(
-        
         primary_key=True,
         index=True,
         nullable=False,
         unique=True,
         default=uuid4,
     )
+
 
 accounts_roles = Table(
     "accounts_roles",
@@ -49,19 +49,44 @@ class User(Base, IDMixin):
 
     roles = relationship("Role", secondary=accounts_roles, back_populates="users")
     tokens = relationship("UserToken", back_populates="user")
-
+    files = relationship("File", back_populates="user")
+    history = relationship("History", back_populates="user")
 
 class Role(Base, IDMixin):
     __tablename__ = "roles"
 
     name: Mapped[str] = mapped_column(nullable=False, unique=True)
-    users: Mapped["User"] = relationship(back_populates="roles", secondary=accounts_roles)
+    users: Mapped["User"] = relationship(
+        back_populates="roles", secondary=accounts_roles
+    )
 
-class UserToken(Base, IDMixin): 
+
+class UserToken(Base, IDMixin):
     __tablename__ = "tokens"
 
-    user_id: Mapped[UUID] = mapped_column(ForeignKey('accounts.id'),nullable=False)
+    user_id: Mapped[UUID] = mapped_column(ForeignKey("accounts.id"), nullable=False)
     token: Mapped[str] = mapped_column(nullable=False, unique=True)
     expires_at: Mapped[datetime] = mapped_column()
 
-    user = relationship("User", back_populates='tokens')
+    user = relationship("User", back_populates="tokens")
+
+
+class History(Base, IDMixin):
+    __tablename__ = "history"
+    user_id: Mapped[UUID] = mapped_column(ForeignKey("accounts.id"), nullable=False)
+    file_id: Mapped[UUID] = mapped_column(ForeignKey("files.id"), nullable=False)
+
+    result: Mapped[dict] = mapped_column(JSON, nullable=True, default=None)
+    status: Mapped[str] = mapped_column(nullable=False, default="CREATED")
+    error: Mapped[str] = mapped_column(nullable=True, default=None)
+
+    user = relationship("User", back_populates="history")
+    file = relationship("File", back_populates="history")
+class File(Base, IDMixin):
+    __tablename__ = "files"
+    created_by: Mapped[UUID] = mapped_column(ForeignKey("accounts.id"), nullable=False)
+    file_url: Mapped[str] = mapped_column(nullable=False,
+    )
+
+    history = relationship("History", back_populates="file")
+    user = relationship("User", back_populates="files")

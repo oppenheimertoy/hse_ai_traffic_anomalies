@@ -7,7 +7,7 @@ export const useTokens = () => {
   const client = useQueryClient()
   const createToken = useMutation<Token, Error, Date>({
     mutationFn: async (expires_at) => await createTokenRequest(expires_at)
-    , onSuccess: () => client.invalidateQueries(['tokens'])
+    , onSuccess: () => client.invalidateQueries({ queryKey: ['tokens'] })
   })
 
   const { data, status, refetch } = useQuery({

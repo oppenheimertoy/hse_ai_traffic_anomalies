@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import socket
-from collections import defaultdict
 from typing import Dict, List
 
 import dpkt
@@ -13,6 +12,7 @@ class PCAPConverter:
     """
     Конвертер PCAP файлов в оконные признаки для временных рядов
     """
+
     def __init__(self, window_size: int = 1):
         self.window_size = window_size
 
@@ -54,6 +54,7 @@ class PCAPConverter:
                         error_count += 1
         except Exception as e:
             print(f"error reading pcap: {e}")
+            raise
         if packet_count == 0:
             print("no packets extracted")
             return pd.DataFrame()
@@ -65,7 +66,9 @@ class PCAPConverter:
         for idx in sorted(windows.keys()):
             packets = windows[idx]
             window_start = base_time + idx * self.window_size
-            features = self._compute_features(packets, window_start, prev_window_features)
+            features = self._compute_features(
+                packets, window_start, prev_window_features
+            )
             features["label"] = label
             rows.append(features)
             prev_window_features = features
@@ -158,13 +161,14 @@ class PCAPConverter:
                     info["dst_port"] = transport.dport
                     info["payload_len"] = len(transport.data) if transport.data else 0
 
-        except Exception:
-            pass
+        except Exception as e:
+            raise e
 
         return info
 
-    def _compute_features(self, packets: List[Dict], window_start: float, 
-                          prev_features: Dict | None) -> Dict:
+    def _compute_features(
+        self, packets: List[Dict], window_start: float, prev_features: Dict | None
+    ) -> Dict:
         """вычисление признаков для окна"""
         if not packets:
             return self._empty_features(window_start)
@@ -197,7 +201,11 @@ class PCAPConverter:
             features["iat_max"] = float(np.max(iats))
             features["iat_median"] = float(np.median(iats))
             # коэффициент вариации IAT - хороший индикатор burst-ов
-            features["iat_cv"] = features["iat_std"] / features["iat_mean"] if features["iat_mean"] > 0 else 0.0
+            features["iat_cv"] = (
+                features["iat_std"] / features["iat_mean"]
+                if features["iat_mean"] > 0
+                else 0.0
+            )
         else:
             features["iat_mean"] = 0.0
             features["iat_std"] = 0.0
@@ -211,9 +219,11 @@ class PCAPConverter:
         features["unique_dst_ips"] = int(df["dst_ip"].nunique())
         features["unique_src_ports"] = int(df["src_port"].nunique())
         features["unique_dst_ports"] = int(df["dst_port"].nunique())
-        
+
         # уникальные пары (flow-like)
-        features["unique_flows"] = int(df.groupby(["src_ip", "dst_ip", "src_port", "dst_port"]).ngroups)
+        features["unique_flows"] = int(
+            df.groupby(["src_ip", "dst_ip", "src_port", "dst_port"]).ngroups
+        )
         features["unique_ip_pairs"] = int(df.groupby(["src_ip", "dst_ip"]).ngroups)
 
         # === протоколы ===
@@ -221,7 +231,9 @@ class PCAPConverter:
         features["tcp_count"] = int(proto.get("tcp", 0))
         features["udp_count"] = int(proto.get("udp", 0))
         features["icmp_count"] = int(proto.get("icmp", 0))
-        features["other_proto_count"] = n - features["tcp_count"] - features["udp_count"] - features["icmp_count"]
+        features["other_proto_count"] = (
+            n - features["tcp_count"] - features["udp_count"] - features["icmp_count"]
+        )
         features["tcp_ratio"] = features["tcp_count"] / n
         features["udp_ratio"] = features["udp_count"] / n
 
@@ -235,7 +247,7 @@ class PCAPConverter:
             features["rst_count"] = sum(f.get("rst", False) for f in flags_list)
             features["psh_count"] = sum(f.get("psh", False) for f in flags_list)
             features["urg_count"] = sum(f.get("urg", False) for f in flags_list)
-            
+
             # syn без ack - потенциальный scan
             features["syn_only_count"] = sum(
                 f.get("syn", False) and not f.get("ack", False) for f in flags_list
@@ -262,8 +274,12 @@ class PCAPConverter:
         well_known_ports = {20, 21, 22, 23, 25, 53, 80, 110, 143, 443, 993, 995}
         dst_ports = df["dst_port"].dropna().astype(int)
         if not dst_ports.empty:
-            features["well_known_port_ratio"] = sum(p in well_known_ports for p in dst_ports) / len(dst_ports)
-            features["high_port_ratio"] = sum(p > 1024 for p in dst_ports) / len(dst_ports)
+            features["well_known_port_ratio"] = sum(
+                p in well_known_ports for p in dst_ports
+            ) / len(dst_ports)
+            features["high_port_ratio"] = sum(p > 1024 for p in dst_ports) / len(
+                dst_ports
+            )
         else:
             features["well_known_port_ratio"] = 0.0
             features["high_port_ratio"] = 0.0
@@ -383,23 +399,25 @@ class PCAPConverter:
 
         # ключевые метрики для временных рядов
         key_cols = ["packet_count", "byte_count", "unique_flows", "entropy_dst_ip"]
-        
+
         for col in key_cols:
             if col not in df.columns:
                 continue
-                
+
             # изменение относительно предыдущего окна
             df[f"{col}_diff"] = df[col].diff().fillna(0)
-            
+
             # процентное изменение
-            df[f"{col}_pct_change"] = df[col].pct_change().fillna(0).replace([np.inf, -np.inf], 0)
-            
+            df[f"{col}_pct_change"] = (
+                df[col].pct_change().fillna(0).replace([np.inf, -np.inf], 0)
+            )
+
             # скользящее среднее (5 окон)
             df[f"{col}_ma5"] = df[col].rolling(5, min_periods=1).mean()
-            
+
             # отклонение от скользящего среднего
             df[f"{col}_ma5_dev"] = df[col] - df[f"{col}_ma5"]
-            
+
             # скользящее стандартное отклонение
             df[f"{col}_rolling_std"] = df[col].rolling(5, min_periods=1).std().fillna(0)
 

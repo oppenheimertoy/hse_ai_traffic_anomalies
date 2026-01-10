@@ -1,13 +1,20 @@
 import asyncio
 import logging
 import sys
+from pathlib import Path
 from typing import Any
 
 import uvicorn
 from fastapi import APIRouter, FastAPI
 
+# извините
+ROOT_DIR = Path(__file__).resolve().parents[2]
+if str(ROOT_DIR) not in sys.path:
+    sys.path.append(str(ROOT_DIR))
+
 from src.api.http.v1.routers import api_router
 from src.deps import make_app
+
 
 logging.basicConfig(
     level=logging.INFO,

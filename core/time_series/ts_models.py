@@ -4,6 +4,8 @@ from typing import Dict, List, Tuple
 
 import numpy as np
 import pandas as pd
+from sklearn.ensemble import IsolationForest
+from statsmodels.tsa.arima.model import ARIMA
 from scipy import stats
 from sklearn.ensemble import IsolationForest
 from sklearn.preprocessing import StandardScaler
@@ -198,6 +200,6 @@ class TimeSeriesAnomalyDetector:
 
         return {
             "anomalies": preds == -1,
-            "anomaly_scores": scores,
+            "anomaly_scores": scores.tolist(),
             "model": model,
         }

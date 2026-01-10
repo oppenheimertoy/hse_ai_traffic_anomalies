@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Annotated
+from typing import Annotated, List
 
 from fastapi import APIRouter, Depends, File, HTTPException, Request, UploadFile, status
 from fastapi.security import OAuth2PasswordRequestForm
@@ -7,6 +7,7 @@ from fastapi.security import OAuth2PasswordRequestForm
 import src.domain.auth.dto as auth_dto
 import src.domain.auth.entity as auth_entity
 import src.domain.user.dto as user_dto
+from backend.src.domain.file.dto import FileCreateDTO
 from src.api.http.v1 import schemas
 from src.application.usecase import Usecase
 from src.deps import make_usecase
@@ -72,12 +73,14 @@ async def test_token() -> bool:
 
 @api_router.post("/forward")
 async def recieve_pcap_file(
+    request: Request,
     usecase: Annotated[Usecase, Depends(make_usecase)],
     pcap: UploadFile = File(...),
-) -> str:
+) -> schemas.History:
     if not pcap.filename:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST, detail="Missing file name."
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Missing file name.",
         )
     ext = Path(pcap.filename).suffix.lower()
     if ext not in {".pcap", ".csv"}:
@@ -85,8 +88,16 @@ async def recieve_pcap_file(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Only .pcap or .csv files are allowed.",
         )
-    return await usecase.forward_pcap(pcap)
+    user_id = request.state.user_id
+    dto = FileCreateDTO(file=await pcap.read(), user_id=user_id)
+    return await usecase.forward_pcap(dto)
 
+@api_router.post('/history')
+async def poll_files_statuses( 
+    usecase: Annotated[Usecase, Depends(make_usecase)],
+    ids: schemas.HistoryIds,
+) -> List[schemas.History]:
+    return await usecase.get_history_items(ids.ids)
 
 @token_router.post("/")
 async def create_basic_token(
@@ -96,7 +107,11 @@ async def create_basic_token(
 ) -> auth_entity.Token:
     user_id = request.state.user_id
     return await usecase.create_user_token(
-        auth_dto.TokenCreateDTO(user_id=user_id, expires_at=payload.expires_at, token=None),
+        auth_dto.TokenCreateDTO(
+            user_id=user_id,
+            expires_at=payload.expires_at,
+            token=None,
+        ),
     )
 
 
@@ -107,6 +122,7 @@ async def get_all_tokens(
 ) -> list[auth_entity.Token]:
     tokens = await usecase.get_user_tokens(user_id=request.state.user_id)
     return tokens
+
 
 user_router.include_router(token_router)
 api_router.include_router(auth_router)

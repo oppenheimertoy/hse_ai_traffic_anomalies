@@ -1,6 +1,8 @@
 from typing import Callable
 
 from sqlalchemy.ext.asyncio import AsyncSession
+from src.adapters.repository.sqlalchemy.file import SqlaFileRepository
+from src.adapters.repository.sqlalchemy.history import SqlaHistoryRepository
 from src.adapters.repository.sqlalchemy.token import SqlaTokenRepository
 from src.adapters.repository.sqlalchemy.user import SqlaUserRepository
 from src.application.uow_manager import AbstractUoWManager
@@ -12,10 +14,13 @@ class UnitOfWork(AbstractUnitOfWork):
         self._sqla_session: AsyncSession = sqla_session
         self.users = SqlaUserRepository(self._sqla_session)
         self.tokens = SqlaTokenRepository(self._sqla_session)
-        
+        self.history = SqlaHistoryRepository(self._sqla_session)
+        self.files = SqlaFileRepository(self._sqla_session)
+
     @property
     def sqla_session(self) -> AsyncSession:
         return self._sqla_session
+
 
 class UOWManager(AbstractUoWManager):
     _uow: UnitOfWork | None = None
@@ -27,15 +32,23 @@ class UOWManager(AbstractUoWManager):
         sqla_session = self._sqla_session_factory()
         self._uow = UnitOfWork(sqla_session)
         return self._uow
-    
+
     async def _close_uow(self) -> None:
-        if self._uow: 
+        if self._uow:
             await self._uow.sqla_session.close()
             self._uow = None
+
     async def commit(self) -> None:
         if self._uow:
-            await self._uow.sqla_session.commit()
-    
+            try:
+                await self._uow.sqla_session.commit()
+            except Exception as e:
+                await self.rollback()
+                raise e
+
     async def rollback(self) -> None:
         if self._uow:
-            await self._uow.sqla_session.rollback()
+            try:
+                await self._uow.sqla_session.rollback()
+            except Exception as e:
+                raise e

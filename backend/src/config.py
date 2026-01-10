@@ -19,7 +19,6 @@ class Config(BaseSettings):
     JWT_ALGORITHM: str
     JWT_ACCESS_TOKEN_EXPIRE_MINUTES: int
     JWT_REFRESH_TOKEN_EXPIRE_DAYS: int
-    JWT_CERTIFICATE_URL: str
 
     model_config = SettingsConfigDict(env_nested_delimiter="__", env_file=".env")
 

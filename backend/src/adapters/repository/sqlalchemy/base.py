@@ -1,6 +1,7 @@
 import abc
+import uuid
 from collections.abc import Collection
-from typing import Any, Generic, Self, TypeVar
+from typing import Any, Generic, List, Self, TypeVar
 
 from sqlalchemy import exc, func, insert, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -22,14 +23,18 @@ class BaseCrudRepository(abc.ABC, Generic[_TM]):
 
     async def create(self, dto: Any) -> Any:  # noqa: ANN401
         try:
-            cmd = insert(self.model).values(dto.model_dump(exclude_unset=True)).returning(self.model)
+            cmd = (
+                insert(self.model)
+                .values(dto.model_dump(exclude_unset=True))
+                .returning(self.model)
+            )
             result = await self._session.execute(cmd)
 
             obj = result.unique().scalar_one()
         except exc.IntegrityError as e:
             raise errors.IntegrityError(str(e.orig))
         return self.map(obj)
-    
+
     async def create_many(self, create_dtos: Collection[Any]) -> list[Any]:
         if not create_dtos:
             return []
@@ -54,8 +59,16 @@ class BaseCrudRepository(abc.ABC, Generic[_TM]):
             raise errors.NotFoundError(msg)
 
         return self.map(obj)
+    
+    async def get_multiple(self, obj_ids: List[uuid.UUID]) -> List[Any]:  
+        if not obj_ids:
+            return []
+        query = select(self.model).where(self.model.id.in_(list(obj_ids)))
+        result = await self._session.execute(query)
+        objs = result.unique().scalars().all()
+        return [self.map(obj) for obj in objs]
 
-    async def update(self, id: str, dto: Any) -> Any: 
+    async def update(self, id: uuid.UUID, dto: Any) -> Any:
         query = select(self.model).filter_by(id=id)
         result = await self._session.execute(query)
         obj = result.unique().scalar_one_or_none()
@@ -77,7 +90,7 @@ class BaseCrudRepository(abc.ABC, Generic[_TM]):
             raise errors.IntegrityError(str(e.orig))
         return self.map(obj)
 
-    async def delete(self, id: str) -> bool: 
+    async def delete(self, id: str) -> bool:
         query = select(self.model).filter_by(id=id)
         result = await self._session.execute(query)
         obj = result.unique().scalar_one_or_none()

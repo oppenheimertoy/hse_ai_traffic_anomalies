@@ -1,14 +1,16 @@
 import { Box, Button, HStack, Menu, Portal, Spacer } from "@chakra-ui/react"
-import { useState } from "react"
+import React, { useState } from "react"
 import MainPage from "./pages/main"
 import HistoryPage from "./pages/history"
 import AccountPage from "./pages/account"
 import { MdAccountCircle } from "react-icons/md"
+import { LuChartBar, LuHistory } from "react-icons/lu"
 
 
 
 type SelectedPage = {
   index: number
+  icon: React.ReactNode
   title: string
   component: React.ReactNode
 }
@@ -17,12 +19,14 @@ export const Layout: React.FC = () => {
   const pages: SelectedPage[] = [
     {
       index: 0,
+      icon: <LuChartBar />,
       title: "Main",
       component:
         <MainPage />,
     },
     {
       index: 1,
+      icon: <LuHistory />,
       title: "History",
       component: <HistoryPage />
     },
@@ -61,7 +65,10 @@ export const Layout: React.FC = () => {
             bg='white'
 
             onClick={() => handlePageSelection(page.index)}>
-            {page.title}
+            {<HStack>
+              {page.icon}
+              {page.title}
+            </HStack>}
           </Button>)
         }
 

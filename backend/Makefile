@@ -34,7 +34,7 @@ run_build_gpu :
 		docker compose -f docker_compose.gpu.yml up
 
 run_dev: 
-	docker compose up postgres redis -d
+	docker compose up postgres redis minio -d
 	. .venv/bin/activate && \
 	uv pip install -r requirements.txt && \
 	alembic upgrade head && \
