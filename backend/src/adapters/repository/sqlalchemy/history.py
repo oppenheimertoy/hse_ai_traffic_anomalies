@@ -56,13 +56,14 @@ class SqlaHistoryRepository(BaseCrudRepository[History], AbstractHistoryReposito
         self,
         obj_ids: List[uuid.UUID],
     ) -> List[history_entity.History]:
-        if not obj_ids:
-            return []
-        query = (
-            select(self.model)
-            .options(selectinload(self.model.file))
-            .where(self.model.id.in_(list(obj_ids)))
-        )
+        if not obj_ids or len(obj_ids) == 0:
+            query = select(self.model).options(selectinload(self.model.file))
+        else:
+            query = (
+                select(self.model)
+                .options(selectinload(self.model.file))
+                .where(self.model.id.in_(list(obj_ids)))
+            )
         result = await self._session.execute(query)
         objs = result.unique().scalars().all()
         return [self.map(obj) for obj in objs]
