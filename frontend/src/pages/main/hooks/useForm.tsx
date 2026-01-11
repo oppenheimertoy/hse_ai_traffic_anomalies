@@ -10,7 +10,12 @@ export const useForm = () => {
   const [filesToPoll, setFilesToPoll] = useState<AnalyzedFile[] | undefined>()
   const { data: pollingFiles, status: pollingStatus, error: pollingError } = useQuery<AnalyzedFile[]>({
     queryKey: ["files", filesToPoll],
-    queryFn: filesToPoll ? () => pollFiles(filesToPoll) : skipToken,
+    queryFn: filesToPoll
+      ? () => {
+        console.log(filesToPoll)
+        return pollFiles(filesToPoll)
+      }
+      : skipToken,
     refetchOnMount: false,
     refetchInterval: (queryData) => {
       if (queryData.state.data === undefined) return false
@@ -37,7 +42,7 @@ export const useForm = () => {
     onSuccess: (data) => {
       setFilesToPoll(prev => prev ? [...prev, data] : [data])
     },
-    onError: (e) => console.log(e)
+    onError: (e) => console.error(e)
   })
 
   const sendAllFiles = () => {

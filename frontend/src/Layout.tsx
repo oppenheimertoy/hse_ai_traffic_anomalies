@@ -61,6 +61,7 @@ export const Layout: React.FC = () => {
       <HStack>
         {
           pages.map(page => <Button
+            key={"layout" + page.index}
             variant={'outline'}
             bg='white'
 

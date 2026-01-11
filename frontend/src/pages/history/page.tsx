@@ -2,6 +2,7 @@ import { Box, VStack, SimpleGrid, Badge, Button, CodeBlock, createShikiAdapter, 
 import { useHistory } from "./hooks/useHistory"
 import { HighlighterGeneric } from "shiki"
 import { AnalyzedFile } from "./types/analyzedFile"
+import { ChartsContainer } from "./chartsContainer"
 
 export const Page: React.FC = () => {
   const { pollingFiles,
@@ -114,7 +115,18 @@ const ItemCard: React.FC<ItemCardProps> = ({
 
       {item.result && <DataList.Item>
         <DataList.ItemLabel>
-          Result
+          Result charts
+        </DataList.ItemLabel>
+
+        <DataList.ItemValue>
+          <ChartsContainer result={item.result} />
+        </DataList.ItemValue>
+      </DataList.Item>
+      }
+
+      {item.result && <DataList.Item>
+        <DataList.ItemLabel>
+          Result data
         </DataList.ItemLabel>
 
         <DataList.ItemValue>
