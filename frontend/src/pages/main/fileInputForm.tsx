@@ -117,7 +117,7 @@ const FilesList: React.FC<FilesListProps> = ({
     p='2'>
     {files === undefined ?
       <Spinner />
-      : files.map((file, index) => <Box>
+      : files.map((file, index) => <Box key={"files_form_file_" + index.toString()}>
         <HStack
           p='2'
           bg='gray.100'

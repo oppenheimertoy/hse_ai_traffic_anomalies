@@ -1,8 +1,25 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { authenticatedRequest } from "../../../services/authFetch"
-import { AnalyzedFile } from "../types/analyzedFile"
+import { AnalyzedFile, AnalyzedFileResult, IsolationForestResult } from "../types/analyzedFile"
+
 const filesURL = "history"
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const convertIsolationForest = (resIsolationForest: any): IsolationForestResult | undefined => {
+  if (resIsolationForest !== null) {
+    return {
+      anomalyScores: resIsolationForest.anomaly_scores,
+      anomalies: resIsolationForest.anomalies,
+    }
+  }
+}
+
+const convertResult = (resResult: any): AnalyzedFileResult | undefined => {
+  if (resResult !== null)
+    return {
+      isolationForest: convertIsolationForest(resResult.isolation_forest),
+    }
+}
+
 const convertResponseToAnalyzedFile = (res: any): AnalyzedFile => {
   return {
     id: res.id,
@@ -11,7 +28,7 @@ const convertResponseToAnalyzedFile = (res: any): AnalyzedFile => {
     isDeleted: res.deleted,
     deletedAt: res.deleted_at,
     fileUrl: res.file_url,
-    result: res.result,
+    result: convertResult(res.result),
     error: res.error,
     status: res.status.toLowerCase(),
     userId: res.user_id,

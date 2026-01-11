@@ -1,6 +1,7 @@
 import { Badge, Box, Button, CodeBlock, createShikiAdapter, DataList, IconButton, Separator, SimpleGrid, VStack } from "@chakra-ui/react"
 import { AnalyzedFile } from "./types/analyzedFile"
 import { HighlighterGeneric } from "shiki"
+import { ChartsContainer } from "./chartsContainer"
 
 type ContentContainerProps = {
   pollingItems: AnalyzedFile[]
@@ -119,7 +120,18 @@ const ItemCard: React.FC<ItemCardProps> = ({
 
       {item.result && <DataList.Item>
         <DataList.ItemLabel>
-          Result
+          Result charts
+        </DataList.ItemLabel>
+
+        <DataList.ItemValue>
+          <ChartsContainer result={item.result} />
+        </DataList.ItemValue>
+      </DataList.Item>
+      }
+
+      {item.result && <DataList.Item>
+        <DataList.ItemLabel>
+          Result data
         </DataList.ItemLabel>
 
         <DataList.ItemValue>
